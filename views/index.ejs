@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Million Pixels Homepage</title>
+    <style>
+        #grid {
+            position: relative;
+            width: 1000px;
+            height: 1000px;
+            border: 1px solid #ccc;
+            margin: 20px auto;
+            background-color: #f9f9f9;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .pixel {
+            position: absolute;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: transform 0.2s, z-index 0.2s;
+            overflow: hidden;
+        }
+        .pixel:hover {
+            transform: scale(1.05);
+            z-index: 1000;
+            border-color: #3498db;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.5);
+        }
+        .pixel img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .pixel-tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1001;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .pixel:hover .pixel-tooltip {
+            opacity: 1;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .stats {
+            text-align: center;
+            margin: 10px 0;
+            color: #7f8c8d;
+        }
+        .admin-link {
+            display: block;
+            text-align: center;
+            margin: 20px auto;
+            width: 200px;
+            padding: 10px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .admin-link:hover {
+            background: #2980b9;
+        }
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .controls button {
+            padding: 8px 16px;
+            margin: 0 5px;
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 The Million Pixels Homepage 🎨</h1>
+    <div class="stats">
+        Всего пикселей: <span id="totalPixels">0</span> | 
+        С изображениями: <span id="imagesCount">0</span>
+    </div>
+    
+    <div class="controls">
+        <button onclick="zoomIn()">+ Увеличить</button>
+        <button onclick="zoomOut()">- Уменьшить</button>
+        <button onclick="resetZoom()">Сбросить масштаб</button>
+        <button onclick="toggleGrid()">Сетка</button>
+    </div>
+    
+    <div id="gridContainer" style="overflow: auto; max-width: 100%;">
+        <div id="grid"></div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="/admin" class="admin-link">Панель администратора</a>
+    </div>
+
+    <script>
+        let pixels = [];
+        let zoomLevel = 1;
+        let gridVisible = true;
+
+        async function loadPixels() {
+            try {
+                const response = await fetch('/api/pixels');
+                pixels = await response.json();
+                
+                renderPixels();
+                updateStats();
+            } catch (error) {
+                console.error('Ошибка загрузки пикселей:', error);
+            }
+        }
+
+        function renderPixels() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            
+            pixels.forEach(pixel => {
+                const pixelDiv = document.createElement('div');
+                pixelDiv.className = 'pixel';
+                pixelDiv.style.left = pixel.x * zoomLevel + 'px';
+                pixelDiv.style.top = pixel.y * zoomLevel + 'px';
+                pixelDiv.style.width = pixel.width * zoomLevel + 'px';
+                pixelDiv.style.height = pixel.height * zoomLevel + 'px';
+                
+                if (pixel.image_url) {
+                    pixelDiv.innerHTML = `
+                        <img src="${pixel.image_url}" alt="${pixel.title}">
+                        <div class="pixel-tooltip" style="top: -30px; left: 0;">
+                            ${pixel.title} - ${pixel.username}
+                        </div>
+                    `;
+                } else {
+                    pixelDiv.style.backgroundColor = pixel.color || '#ffffff';
+                    pixelDiv.innerHTML = `
+                        <div class="pixel-tooltip" style="top: -30px; left: 0;">
+                            ${pixel.title} - ${pixel.username}
+                        </div>
+                    `;
+                }
+                
+                if (pixel.link) {
+                    pixelDiv.style.cursor = 'pointer';
+                    pixelDiv.onclick = () => window.open(pixel.link, '_blank');
+                }
+                
+                grid.appendChild(pixelDiv);
+            });
+            
+            // Обновляем размер сетки с учетом масштаба
+            grid.style.width = 1000 * zoomLevel + 'px';
+            grid.style.height = 1000 * zoomLevel + 'px';
+            
+            // Обновляем видимость сетки
+            grid.style.border = gridVisible ? '1px solid #ccc' : 'none';
+        }
+
+        function updateStats() {
+            document.getElementById('totalPixels').textContent = pixels.length;
+            const imagesCount = pixels.filter(p => p.image_url).length;
+            document.getElementById('imagesCount').textContent = imagesCount;
+        }
+
+        function zoomIn() {
+            if (zoomLevel < 3) {
+                zoomLevel += 0.1;
+                renderPixels();
+            }
+        }
+
+        function zoomOut() {
+            if (zoomLevel > 0.5) {
+                zoomLevel -= 0.1;
+                renderPixels();
+            }
+        }
+
+        function resetZoom() {
+            zoomLevel = 1;
+            renderPixels();
+        }
+
+        function toggleGrid() {
+            gridVisible = !gridVisible;
+            const grid = document.getElementById('grid');
+            grid.style.border = gridVisible ? '1px solid #ccc' : 'none';
+        }
+
+        // Загружаем пиксели при загрузке страницы
+        window.onload = loadPixels;
+
+        // Авто-обновление каждые 30 секунд
+        setInterval(loadPixels, 30000);
+    </script>
+    <!-- Добавить в конец файла, перед закрывающим тегом body -->
+<div style="text-align: center; margin-top: 20px; padding: 20px; background: #f5f7fa; border-radius: 10px; max-width: 800px; margin: 20px auto;">
+    <h2>Хотите купить свои пиксели?</h2>
+    <p>Присоединяйтесь к нашему сообществу и разместите свою рекламу на Million Pixels!</p>
+    <div style="display: flex; gap: 15px; justify-content: center; margin-top: 15px; flex-wrap: wrap;">
+        <a href="/user" style="padding: 12px 30px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            👤 Войти / Зарегистрироваться
+        </a>
+        <a href="/user/select-pixels" style="padding: 12px 30px; background: #2ecc71; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            🛒 Купить пиксели
+        </a>
+        <a href="/admin" style="padding: 12px 30px; background: #7f8c8d; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            ⚙️ Админ-панель
+        </a>
+    </div>
+</div>
+</body>
+</html>
