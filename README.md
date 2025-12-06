@@ -1,4 +1,4 @@
-# The Million Pixels Homepage - Node.js версия
+# The Million Pixels Homepage - Node.js v22.20.0
 
 Веб-приложение для продажи пикселей с поддержкой загрузки изображений.
 
