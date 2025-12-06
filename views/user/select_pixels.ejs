@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор пикселей - Million Pixels</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        
+        .navbar {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .btn-logout {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-logout:hover {
+            background: #c0392b;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .page-title {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .selection-container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+        
+        @media (max-width: 1024px) {
+            .selection-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .grid-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        
+        .grid-wrapper {
+            overflow: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            max-width: 100%;
+            max-height: 600px;
+        }
+        
+        #pixelGrid {
+            position: relative;
+            width: 1000px;
+            height: 1000px;
+            background: white;
+            cursor: crosshair;
+        }
+        
+        .grid-line {
+            position: absolute;
+            background: rgba(0,0,0,0.05);
+        }
+        
+        .grid-line.vertical {
+            width: 1px;
+            height: 100%;
+        }
+        
+        .grid-line.horizontal {
+            width: 100%;
+            height: 1px;
+        }
+        
+        .occupied-pixel {
+            position: absolute;
+            background: rgba(231, 76, 60, 0.3);
+            border: 1px solid #e74c3c;
+        }
+        
+        .selection-box {
+            position: absolute;
+            border: 2px solid #3498db;
+            background: rgba(52, 152, 219, 0.1);
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .info-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .info-section {
+            margin-bottom: 25px;
+        }
+        
+        .info-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f7fa;
+        }
+        
+        .info-label {
+            color: #7f8c8d;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .instructions {
+            background: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .instructions h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            padding-left: 20px;
+            color: #7f8c8d;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            padding: 8px 15px;
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #dde4e6;
+        }
+        
+        .coordinates {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .payment-info {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .bitcoin-address {
+            font-family: monospace;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+            border: 1px dashed #ddd;
+            font-size: 14px;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background: white;
+        }
+        
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .timer {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .testnet-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .testnet-notice a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .testnet-notice a:hover {
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .selection-coordinates {
+            background: #e8f4fc;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .error-alert {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #c62828;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">🎨 Million Pixels</a>
+        <div class="navbar-nav">
+            <a href="/user?session=<%= sessionId %>" class="nav-link">← Назад в кабинет</a>
+            <span class="nav-link">👤 <%= user.username %></span>
+            <a href="/user/logout?session=<%= sessionId %>" class="btn-logout">🚪 Выйти</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <h1 class="page-title">Выбор пикселей для покупки</h1>
+        
+        <div class="instructions">
+            <h4>📋 Инструкция:</h4>
+            <ol>
+                <li><strong>Кликните</strong> на сетке, чтобы установить начальную точку</li>
+                <li><strong>Перетащите</strong> мышь, чтобы выбрать область</li>
+                <li><strong>Отпустите</strong> кнопку мыши для завершения выбора</li>
+                <li>Заполните информацию о пикселе</li>
+                <li>Оплатите заказ в биткоинах (Testnet3) в течение 1 часа</li>
+            </ol>
+            <p><strong>Цена:</strong> <%= (pricePerPixel * 100000000).toFixed(0) %> сатоши за пиксель (~<%= pricePerPixel %> BTC)</p>
+            <p><strong>Минимальный размер:</strong> 1×1 пиксель</p>
+        </div>
+        
+        <div id="errorAlert" class="error-alert"></div>
+        
+        <div class="selection-container">
+            <div class="grid-container">
+                <div class="controls">
+                    <button class="control-btn" onclick="zoomIn()">🔍 + Увеличить</button>
+                    <button class="control-btn" onclick="zoomOut()">🔍 - Уменьшить</button>
+                    <button class="control-btn" onclick="resetZoom()">🔄 Сбросить масштаб</button>
+                    <button class="control-btn" onclick="clearSelection()">🗑️ Очистить выбор</button>
+                    <button class="control-btn" onclick="loadOccupiedPixels()">🔄 Обновить сетку</button>
+                </div>
+                
+                <div class="selection-coordinates" id="selectionInfo">
+                    Выберите область на сетке
+                </div>
+                
+                <div class="grid-wrapper" id="gridWrapper">
+                    <div id="pixelGrid">
+                        <div class="loading" id="gridLoading">
+                            <div class="loading-spinner"></div>
+                            <p>Загрузка сетки...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="info-section">
+                    <h3>📊 Выбор</h3>
+                    <div class="info-item">
+                        <span class="info-label">Начальная точка:</span>
+                        <span class="info-value" id="startCoords">Не выбрано</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Конечная точка:</span>
+                        <span class="info-value" id="endCoords">Не выбрано</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Размер области:</span>
+                        <span class="info-value" id="selectionSize">0×0 px</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Площадь:</span>
+                        <span class="info-value" id="pixelCount">0 пикселей</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Стоимость:</span>
+                        <span class="info-value" id="totalCost">0 BTC</span>
+                    </div>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📝 Информация о пикселе</h3>
+                    <form id="pixelForm">
+                        <div class="form-group">
+                            <label for="title">Заголовок *</label>
+                            <input type="text" id="title" name="title" class="form-control" 
+                                   placeholder="Название вашего пикселя" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="link">Ссылка (URL)</label>
+                            <input type="url" id="link" name="link" class="form-control" 
+                                   placeholder="https://ваш-сайт.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="color">Цвет фона</label>
+                            <input type="color" id="color" name="color" class="form-control" value="#3498db">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Или загрузите изображение:</label>
+                            <input type="file" id="image" name="image" accept="image/*" class="form-control">
+                            <small style="color: #7f8c8d;">JPG, PNG, GIF до 5MB. При загрузке изображения цвет игнорируется.</small>
+                            <div id="imagePreview" style="margin-top: 10px;"></div>
+                        </div>
+                        
+                        <button type="button" id="createOrderBtn" class="btn btn-success" onclick="createOrder()" disabled>
+                            🛒 Создать заказ (Bitcoin Testnet3)
+                        </button>
+                        <small style="color: #7f8c8d; display: block; margin-top: 10px;">* Обязательные поля</small>
+                    </form>
+                </div>
+                
+                <div class="testnet-notice">
+                    <strong>⚠️ Важно:</strong> Используется Bitcoin Testnet3 для тестирования. 
+                    Это тестовая сеть, и монеты здесь не имеют реальной стоимости.
+                    <br>
+                    Получите тестовые биткоины на 
+                    <a href="https://testnet-faucet.com/btc-testnet/" target="_blank">BTC Testnet Faucet</a> или
+                    <a href="https://coinfaucet.eu/en/btc-testnet/" target="_blank">CoinFaucet</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">💳 Оплата заказа (Bitcoin Testnet3)</h2>
+            
+            <div class="payment-info">
+                <h3>Отправьте точную сумму:</h3>
+                <div class="bitcoin-address" id="paymentAmount">0.00000000 BTC</div>
+                
+                <h3>На Bitcoin Testnet3 адрес:</h3>
+                <div class="bitcoin-address" id="bitcoinAddress">Загрузка...</div>
+                
+                <div class="qr-code" id="qrCodeContainer">
+                    <div class="loading-spinner" id="qrLoading"></div>
+                    <img id="qrCodeImage" style="display: none;">
+                </div>
+                
+                <div class="timer" id="paymentTimer">01:00:00</div>
+                <p>Отсканируйте QR-код или скопируйте адрес вручную</p>
+                
+                <div class="testnet-notice">
+                    <strong>Testnet3:</strong> Используйте только тестовые биткоины!
+                    <br>
+                    Адрес начинается с <strong>m</strong>, <strong>n</strong> или <strong>2</strong>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <button class="btn" onclick="copyAddress()">📋 Копировать адрес и сумму</button>
+                <button class="btn" onclick="checkPaymentStatus()">🔄 Проверить оплату</button>
+                <button class="btn" style="background: #7f8c8d;" onclick="closePaymentModal()">Закрыть</button>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <p><strong>ID заказа:</strong> <span id="orderIdDisplay"></span></p>
+                <p><strong>Статус:</strong> <span id="paymentStatus" class="status-pending">ожидает оплаты</span></p>
+                <p><strong>Время на оплату:</strong> 1 час</p>
+            </div>
+            
+            <div style="margin-top: 20px; background: #e8f4fc; padding: 15px; border-radius: 5px;">
+                <h4>Для тестирования:</h4>
+                <p>Можете использовать кнопку ниже для симуляции оплаты:</p>
+                <button class="btn" style="background: #f39c12;" onclick="simulatePayment()">🎯 Симитировать оплату</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedArea = null;
+        let startX = null;
+        let startY = null;
+        let endX = null;
+        let endY = null;
+        let isSelecting = false;
+        let zoomLevel = 1;
+        let occupiedPixels = [];
+        let currentOrder = null;
+        let paymentTimer = null;
+        let gridInitialized = false;
+        
+        // Initialize grid
+        async function initializeGrid() {
+            const grid = document.getElementById('pixelGrid');
+            const loading = document.getElementById('gridLoading');
+            
+            try {
+                // Load occupied pixels
+                await loadOccupiedPixels();
+                
+                // Create grid lines for better visibility
+                createGridLines();
+                
+                // Mark occupied pixels
+                markOccupiedPixels();
+                
+                gridInitialized = true;
+                loading.style.display = 'none';
+                
+            } catch (error) {
+                console.error('Error initializing grid:', error);
+                loading.innerHTML = '<p style="color: #e74c3c;">Ошибка загрузки сетки</p>';
+            }
+        }
+        
+        function createGridLines() {
+            const grid = document.getElementById('pixelGrid');
+            
+            // Create vertical lines every 100px
+            for (let x = 100; x < 1000; x += 100) {
+                const line = document.createElement('div');
+                line.className = 'grid-line vertical';
+                line.style.left = x + 'px';
+                line.style.top = '0';
+                grid.appendChild(line);
+            }
+            
+            // Create horizontal lines every 100px
+            for (let y = 100; y < 1000; y += 100) {
+                const line = document.createElement('div');
+                line.className = 'grid-line horizontal';
+                line.style.left = '0';
+                line.style.top = y + 'px';
+                grid.appendChild(line);
+            }
+        }
+        
+        async function loadOccupiedPixels() {
+            try {
+                const response = await fetch('/api/pixels/occupied');
+                occupiedPixels = await response.json();
+            } catch (error) {
+                console.error('Error loading occupied pixels:', error);
+            }
+        }
+        
+        function markOccupiedPixels() {
+            const grid = document.getElementById('pixelGrid');
+            
+            // Clear previous occupied markers
+            document.querySelectorAll('.occupied-pixel').forEach(el => el.remove());
+            
+            occupiedPixels.forEach(pixel => {
+                const occupiedDiv = document.createElement('div');
+                occupiedDiv.className = 'occupied-pixel';
+                occupiedDiv.style.left = pixel.x + 'px';
+                occupiedDiv.style.top = pixel.y + 'px';
+                occupiedDiv.style.width = pixel.width + 'px';
+                occupiedDiv.style.height = pixel.height + 'px';
+                occupiedDiv.title = `Занято: ${pixel.width}×${pixel.height} пикселей`;
+                grid.appendChild(occupiedDiv);
+            });
+        }
+        
+        function isAreaOccupied(x, y, width, height) {
+            return occupiedPixels.some(pixel => {
+                // Проверка пересечения прямоугольников
+                const noOverlap = 
+                    x + width <= pixel.x ||
+                    x >= pixel.x + pixel.width ||
+                    y + height <= pixel.y ||
+                    y >= pixel.y + pixel.height;
+                
+                return !noOverlap;
+            });
+        }
+        
+        // Event listeners for grid
+        document.getElementById('pixelGrid').addEventListener('mousedown', startSelection);
+        document.addEventListener('mousemove', updateSelection);
+        document.addEventListener('mouseup', endSelection);
+        
+        function startSelection(e) {
+            const grid = document.getElementById('pixelGrid');
+            const rect = grid.getBoundingClientRect();
+            
+            // Calculate coordinates relative to grid
+            const x = Math.floor((e.clientX - rect.left) / zoomLevel);
+            const y = Math.floor((e.clientY - rect.top) / zoomLevel);
+            
+            // Check bounds
+            if (x < 0 || x > 1000 || y < 0 || y > 1000) return;
+            
+            startX = x;
+            startY = y;
+            endX = x;
+            endY = y;
+            isSelecting = true;
+            
+            // Remove previous selection
+            if (selectedArea) {
+                selectedArea.remove();
+                selectedArea = null;
+            }
+            
+            // Create selection box
+            selectedArea = document.createElement('div');
+            selectedArea.className = 'selection-box';
+            selectedArea.style.left = x + 'px';
+            selectedArea.style.top = y + 'px';
+            selectedArea.style.width = '0px';
+            selectedArea.style.height = '0px';
+            grid.appendChild(selectedArea);
+            
+            updateInfoPanel();
+        }
+        
+        function updateSelection(e) {
+            if (!isSelecting) return;
+            
+            const grid = document.getElementById('pixelGrid');
+            const rect = grid.getBoundingClientRect();
+            
+            // Calculate coordinates relative to grid
+            const currentX = Math.floor((e.clientX - rect.left) / zoomLevel);
+            const currentY = Math.floor((e.clientY - rect.top) / zoomLevel);
+            
+            // Constrain to grid bounds
+            endX = Math.max(0, Math.min(1000, currentX));
+            endY = Math.max(0, Math.min(1000, currentY));
+            
+            // Calculate selection rectangle
+            const x = Math.min(startX, endX);
+            const y = Math.min(startY, endY);
+            const width = Math.abs(endX - startX);
+            const height = Math.abs(endY - startY);
+            
+            // Update selection box
+            if (selectedArea) {
+                selectedArea.style.left = x + 'px';
+                selectedArea.style.top = y + 'px';
+                selectedArea.style.width = width + 'px';
+                selectedArea.style.height = height + 'px';
+            }
+            
+            updateInfoPanel();
+        }
+        
+        function endSelection() {
+            if (!isSelecting) return;
+            isSelecting = false;
+            
+            const width = Math.abs(endX - startX);
+            const height = Math.abs(endY - startY);
+            
+            // Исправлено: минимальный размер 1×1 пиксель
+            if (width < 1 || height < 1) {
+                alert('Минимальный размер области: 1×1 пикселей');
+                clearSelection();
+                return;
+            }
+            
+            const x = Math.min(startX, endX);
+            const y = Math.min(startY, endY);
+            
+            // Check if area is occupied
+            if (isAreaOccupied(x, y, width, height)) {
+                alert('Выбранная область частично или полностью занята!');
+                clearSelection();
+                return;
+            }
+            
+            // Enable order button
+            document.getElementById('createOrderBtn').disabled = false;
+            
+            updateInfoPanel();
+        }
+        
+        function updateInfoPanel() {
+            if (!startX && !startY) {
+                resetInfoPanel();
+                return;
+            }
+            
+            const x = Math.min(startX, endX);
+            const y = Math.min(startY, endY);
+            const width = Math.abs(endX - startX);
+            const height = Math.abs(endY - startY);
+            
+            const pixelCount = width * height;
+            const totalCost = pixelCount * <%= pricePerPixel %>;
+            
+            document.getElementById('startCoords').textContent = `(${x}, ${y})`;
+            document.getElementById('endCoords').textContent = `(${x + width}, ${y + height})`;
+            document.getElementById('selectionSize').textContent = `${width}×${height} px`;
+            document.getElementById('pixelCount').textContent = `${pixelCount} пикселей`;
+            document.getElementById('totalCost').textContent = totalCost.toFixed(8) + ' BTC';
+            
+            document.getElementById('selectionInfo').innerHTML = `
+                Выбрана область: <strong>(${x}, ${y}) - (${x + width}, ${y + height})</strong> | 
+                Размер: <strong>${width}×${height} px</strong> | 
+                Стоимость: <strong>${totalCost.toFixed(8)} BTC</strong>
+            `;
+        }
+        
+        function resetInfoPanel() {
+            document.getElementById('startCoords').textContent = 'Не выбрано';
+            document.getElementById('endCoords').textContent = 'Не выбрано';
+            document.getElementById('selectionSize').textContent = '0×0 px';
+            document.getElementById('pixelCount').textContent = '0 пикселей';
+            document.getElementById('totalCost').textContent = '0 BTC';
+            document.getElementById('createOrderBtn').disabled = true;
+            document.getElementById('selectionInfo').textContent = 'Выберите область на сетке';
+        }
+        
+        function clearSelection() {
+            if (selectedArea) {
+                selectedArea.remove();
+                selectedArea = null;
+            }
+            startX = null;
+            startY = null;
+            endX = null;
+            endY = null;
+            resetInfoPanel();
+        }
+        
+        function zoomIn() {
+            if (zoomLevel < 3) {
+                zoomLevel += 0.1;
+                updateGridZoom();
+            }
+        }
+        
+        function zoomOut() {
+            if (zoomLevel > 0.5) {
+                zoomLevel -= 0.1;
+                updateGridZoom();
+            }
+        }
+        
+        function resetZoom() {
+            zoomLevel = 1;
+            updateGridZoom();
+        }
+        
+        function updateGridZoom() {
+            const grid = document.getElementById('pixelGrid');
+            const wrapper = document.getElementById('gridWrapper');
+            grid.style.transform = `scale(${zoomLevel})`;
+            grid.style.transformOrigin = 'top left';
+        }
+        
+        // Image preview
+        document.getElementById('image').addEventListener('change', function(e) {
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.maxWidth = '200px';
+                    img.style.maxHeight = '150px';
+                    img.style.borderRadius = '5px';
+                    img.style.marginTop = '10px';
+                    preview.appendChild(img);
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+        
+        function showError(message) {
+            const errorAlert = document.getElementById('errorAlert');
+            errorAlert.textContent = message;
+            errorAlert.style.display = 'block';
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                errorAlert.style.display = 'none';
+            }, 10000);
+        }
+        
+        async function createOrder() {
+            if (!selectedArea) {
+                alert('Пожалуйста, выберите область на сетке');
+                return;
+            }
+            
+            const x = Math.min(startX, endX);
+            const y = Math.min(startY, endY);
+            const width = Math.abs(endX - startX);
+            const height = Math.abs(endY - startY);
+            const title = document.getElementById('title').value.trim();
+            
+            if (!title) {
+                alert('Пожалуйста, введите заголовок для пикселя');
+                return;
+            }
+            
+            // Исправлено: минимальный размер 1×1 пиксель
+            if (width < 1 || height < 1) {
+                alert('Минимальный размер области: 1×1 пикселей');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('x', x);
+            formData.append('y', y);
+            formData.append('width', width);
+            formData.append('height', height);
+            formData.append('title', title);
+            formData.append('link', document.getElementById('link').value);
+            formData.append('color', document.getElementById('color').value);
+            
+            const imageInput = document.getElementById('image');
+            if (imageInput.files[0]) {
+                formData.append('image', imageInput.files[0]);
+            }
+            
+            const btn = document.getElementById('createOrderBtn');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Создание заказа...';
+            
+            // Hide any previous errors
+            document.getElementById('errorAlert').style.display = 'none';
+            
+            try {
+                console.log('Sending create order request...');
+                const response = await fetch(`/user/create-order?session=<%= sessionId %>`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Server error response:', errorText);
+                    
+                    let errorMessage = 'Ошибка сервера';
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.error || errorMessage;
+                    } catch (e) {
+                        errorMessage = errorText || 'Неизвестная ошибка';
+                    }
+                    
+                    showError(`Ошибка создания заказа: ${errorMessage}`);
+                    btn.disabled = false;
+                    btn.innerHTML = '🛒 Создать заказ (Bitcoin Testnet3)';
+                    return;
+                }
+                
+                const result = await response.json();
+                console.log('Order creation result:', result);
+                
+                if (result.success) {
+                    currentOrder = result;
+                    showPaymentModal(result);
+                    btn.innerHTML = '✅ Заказ создан!';
+                } else {
+                    showError('Ошибка: ' + (result.error || 'Неизвестная ошибка'));
+                    btn.disabled = false;
+                    btn.innerHTML = '🛒 Создать заказ (Bitcoin Testnet3)';
+                }
+            } catch (error) {
+                console.error('Error creating order:', error);
+                showError(`Ошибка при создании заказа: ${error.message}`);
+                btn.disabled = false;
+                btn.innerHTML = '🛒 Создать заказ (Bitcoin Testnet3)';
+            }
+        }
+        
+        function showPaymentModal(order) {
+            document.getElementById('paymentAmount').textContent = order.totalAmount + ' BTC';
+            document.getElementById('bitcoinAddress').textContent = order.bitcoinAddress;
+            document.getElementById('orderIdDisplay').textContent = order.orderId;
+            
+            // Show QR code
+            const qrImg = document.getElementById('qrCodeImage');
+            const qrLoading = document.getElementById('qrLoading');
+            qrImg.src = order.qrCodeUrl;
+            qrImg.style.display = 'block';
+            qrLoading.style.display = 'none';
+            
+            document.getElementById('paymentModal').style.display = 'flex';
+            
+            // Start payment timer
+            const expiresAt = new Date(order.expiresAt);
+            startPaymentTimer(expiresAt);
+            
+            // Auto-check payment status every 30 seconds
+            setInterval(checkPaymentStatus, 30000);
+        }
+        
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+            if (paymentTimer) {
+                clearInterval(paymentTimer);
+                paymentTimer = null;
+            }
+        }
+        
+        function startPaymentTimer(expiresAt) {
+            function updateTimer() {
+                const now = new Date();
+                const diff = expiresAt - now;
+                
+                if (diff <= 0) {
+                    document.getElementById('paymentTimer').textContent = 'Время истекло!';
+                    document.getElementById('paymentStatus').textContent = 'просрочен';
+                    document.getElementById('paymentStatus').className = 'status-expired';
+                    clearInterval(paymentTimer);
+                    return;
+                }
+                
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                document.getElementById('paymentTimer').textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            updateTimer();
+            paymentTimer = setInterval(updateTimer, 1000);
+        }
+        
+        function copyAddress() {
+            const address = document.getElementById('bitcoinAddress').textContent;
+            const amount = document.getElementById('paymentAmount').textContent;
+            const text = `Отправьте ${amount} на Bitcoin Testnet3 адрес: ${address}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Информация для оплаты скопирована в буфер обмена!');
+            });
+        }
+        
+        async function checkPaymentStatus() {
+            if (!currentOrder) return;
+            
+            try {
+                const response = await fetch(`/api/payment/status/${currentOrder.orderId}`);
+                const result = await response.json();
+                
+                if (result.paid) {
+                    document.getElementById('paymentStatus').textContent = 'оплачен';
+                    document.getElementById('paymentStatus').className = 'status-paid';
+                    document.getElementById('paymentStatus').style.color = '#2ecc71';
+                    alert('✅ Оплата подтверждена! Ваш пиксель скоро появится на сайте.');
+                    closePaymentModal();
+                    window.location.href = `/user/order/${currentOrder.orderId}?session=<%= sessionId %>`;
+                } else if (result.status === 'processing') {
+                    document.getElementById('paymentStatus').textContent = 'обрабатывается';
+                }
+            } catch (error) {
+                console.error('Error checking payment:', error);
+            }
+        }
+        
+        async function simulatePayment() {
+            if (!currentOrder) return;
+            
+            if (!confirm('Симулировать оплату заказа? Это для тестирования.')) return;
+            
+            try {
+                const response = await fetch('/api/payment/confirm-test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderId: currentOrder.orderId,
+                        transactionHash: 'TEST-' + Date.now() + '-SIMULATED'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ Оплата симулирована успешно!');
+                    checkPaymentStatus();
+                } else {
+                    alert('Ошибка: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error simulating payment:', error);
+                alert('Ошибка при симуляции оплаты');
+            }
+        }
+        
+        // Initialize on load
+        window.onload = initializeGrid;
+    </script>
+</body>
+</html>

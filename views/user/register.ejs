@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация - Million Pixels</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #27ae60;
+        }
+        
+        .btn-secondary {
+            background: #7f8c8d;
+        }
+        
+        .btn-secondary:hover {
+            background: #6c7b7d;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .links a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        .home-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .home-link:hover {
+            text-decoration: underline;
+        }
+        
+        .password-strength {
+            margin-top: 5px;
+            height: 4px;
+            background: #eee;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .strength-bar {
+            height: 100%;
+            width: 0;
+            transition: width 0.3s, background 0.3s;
+        }
+        
+        @media (max-width: 480px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+        }
+    </style>
+    <script>
+        function checkPasswordStrength(password) {
+            const strengthBar = document.getElementById('strengthBar');
+            let strength = 0;
+            
+            if (password.length >= 6) strength += 25;
+            if (password.length >= 8) strength += 25;
+            if (/[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 25;
+            
+            strengthBar.style.width = strength + '%';
+            
+            if (strength < 50) {
+                strengthBar.style.background = '#e74c3c';
+            } else if (strength < 75) {
+                strengthBar.style.background = '#f39c12';
+            } else {
+                strengthBar.style.background = '#2ecc71';
+            }
+        }
+        
+        function validatePassword() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorElement = document.getElementById('passwordError');
+            
+            if (password !== confirmPassword) {
+                errorElement.textContent = 'Пароли не совпадают';
+                return false;
+            }
+            
+            if (password.length < 6) {
+                errorElement.textContent = 'Пароль должен быть не менее 6 символов';
+                return false;
+            }
+            
+            errorElement.textContent = '';
+            return true;
+        }
+    </script>
+</head>
+<body>
+    <a href="/" class="home-link">← На главную</a>
+    
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>📝 Регистрация</h1>
+                <p>Создайте аккаунт для покупки пикселей</p>
+            </div>
+            
+            <div class="content">
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="error">
+                        <%= error %>
+                    </div>
+                <% } %>
+                
+                <form action="/user/register" method="POST" onsubmit="return validatePassword()">
+                    <div class="form-group">
+                        <label for="username">Имя пользователя:</label>
+                        <input type="text" id="username" name="username" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Пароль:</label>
+                        <input type="password" id="password" name="password" class="form-control" 
+                               required onkeyup="checkPasswordStrength(this.value)">
+                        <div class="password-strength">
+                            <div id="strengthBar" class="strength-bar"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">Подтвердите пароль:</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required>
+                        <div id="passwordError" style="color: #e74c3c; font-size: 12px; margin-top: 5px;"></div>
+                    </div>
+                    
+                    <button type="submit" class="btn">Зарегистрироваться</button>
+                </form>
+                
+                <div class="links">
+                    <p>Уже есть аккаунт? <a href="/user">Войдите</a></p>
+                    <p><a href="/">← Вернуться на главную</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

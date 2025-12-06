@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали заказа - Million Pixels</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        
+        .navbar {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .navbar-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .btn-logout {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-logout:hover {
+            background: #c0392b;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .order-header {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .order-title {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .order-status {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .order-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .order-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .order-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f5f7fa;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            padding: 10px 0;
+        }
+        
+        .info-label {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: #2c3e50;
+            word-break: break-word;
+        }
+        
+        .payment-info {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .bitcoin-address {
+            font-family: monospace;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+        }
+        
+        .btn-warning:hover {
+            background: #d68910;
+        }
+        
+        .pixel-preview {
+            width: 200px;
+            height: 200px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pixel-preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .pixel-preview-color {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .timer {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e74c3c;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .transaction-info {
+            background: #e8f4fc;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .transaction-hash {
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">🎨 Million Pixels</a>
+        <div class="navbar-nav">
+            <a href="/user?session=<%= sessionId %>" class="nav-link">← Назад в кабинет</a>
+            <a href="/user/logout?session=<%= sessionId %>" class="btn-logout">🚪 Выйти</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="order-header">
+            <div>
+                <h1 class="order-title">Заказ <%= order.order_id %></h1>
+                <p>Создан: <%= new Date(order.created_at).toLocaleString() %></p>
+            </div>
+            <div class="order-status status-<%= order.payment_status %>">
+                <%= order.payment_status === 'paid' ? 'ОПЛАЧЕН' : 
+                   order.payment_status === 'pending' ? 'ОЖИДАЕТ ОПЛАТЫ' : 
+                   order.payment_status === 'expired' ? 'ПРОСРОЧЕН' : order.payment_status.toUpperCase() %>
+            </div>
+        </div>
+        
+        <div class="order-grid">
+            <div class="order-section">
+                <h2 class="section-title">📋 Информация о пикселе</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Позиция:</div>
+                        <div class="info-value">(<%= order.x %>, <%= order.y %>)</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Размер:</div>
+                        <div class="info-value"><%= order.width %> × <%= order.height %> px</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Площадь:</div>
+                        <div class="info-value"><%= (order.width * order.height / 100).toFixed(0) %> пикселей</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Заголовок:</div>
+                        <div class="info-value"><%= order.title %></div>
+                    </div>
+                    <% if (order.link) { %>
+                    <div class="info-item">
+                        <div class="info-label">Ссылка:</div>
+                        <div class="info-value">
+                            <a href="<%= order.link %>" target="_blank"><%= order.link %></a>
+                        </div>
+                    </div>
+                    <% } %>
+                </div>
+                
+                <div class="pixel-preview">
+                    <% if (order.image_url) { %>
+                        <img src="<%= order.image_url %>" alt="<%= order.title %>" class="pixel-preview-image">
+                    <% } else if (order.color) { %>
+                        <div class="pixel-preview-color" style="background-color: <%= order.color %>;"></div>
+                    <% } else { %>
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #7f8c8d;">
+                            Нет изображения
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+            
+            <div class="order-section">
+                <h2 class="section-title">💰 Детали оплаты</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Цена за пиксель:</div>
+                        <div class="info-value"><%= pricePerPixel.toFixed(8) %> BTC</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Общая сумма:</div>
+                        <div class="info-value"><%= parseFloat(order.total_amount).toFixed(8) %> BTC</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Получено:</div>
+                        <div class="info-value"><%= (order.payment_received || 0).toFixed(8) %> BTC</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Статус:</div>
+                        <div class="info-value">
+                            <span class="status status-<%= order.payment_status %>">
+                                <%= order.payment_status === 'paid' ? 'Оплачен' : 
+                                   order.payment_status === 'pending' ? 'Ожидает оплаты' : 
+                                   order.payment_status === 'expired' ? 'Просрочен' : order.payment_status %>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <% if (order.payment_status === 'pending') { %>
+                <div class="payment-info">
+                    <h3>Для оплаты отправьте:</h3>
+                    <div class="bitcoin-address" id="paymentAmount">
+                        <%= parseFloat(order.total_amount).toFixed(8) %> BTC
+                    </div>
+                    
+                    <h3>На Bitcoin адрес:</h3>
+                    <div class="bitcoin-address" id="bitcoinAddress">
+                        <%= order.bitcoin_address %>
+                    </div>
+                    
+                    <div class="timer" id="paymentTimer">
+                        Время на оплату: <span id="timeRemaining"></span>
+                    </div>
+                    
+                    <div class="actions">
+                        <button class="btn btn-success" onclick="copyAddress()">📋 Копировать адрес</button>
+                        <button class="btn" onclick="checkPaymentStatus()">🔄 Проверить оплату</button>
+                    </div>
+                </div>
+                <% } %>
+                
+                <% if (order.transaction_hash) { %>
+                <div class="transaction-info">
+                    <h3>Информация о транзакции:</h3>
+                    <div class="transaction-hash">
+                        Хэш: <%= order.transaction_hash %>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 12px; color: #7f8c8d;">
+                        Транзакция подтверждена. Ваш пиксель будет отображен на сайте в течение нескольких минут.
+                    </p>
+                </div>
+                <% } %>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <a href="/user/select-pixels?session=<%= sessionId %>" class="btn btn-success">
+                🛒 Купить еще пиксели
+            </a>
+            <a href="/user/orders?session=<%= sessionId %>" class="btn">
+                📋 Все мои заказы
+            </a>
+            <a href="/" class="btn btn-warning">
+                🏠 На главную
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        <% if (order.payment_status === 'pending' && order.expires_at) { %>
+        // Start payment timer
+        function startPaymentTimer() {
+            const expiresAt = new Date('<%= order.expires_at %>');
+            
+            function updateTimer() {
+                const now = new Date();
+                const diff = expiresAt - now;
+                
+                if (diff <= 0) {
+                    document.getElementById('timeRemaining').textContent = 'Время истекло!';
+                    document.getElementById('paymentTimer').style.color = '#e74c3c';
+                    return;
+                }
+                
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                document.getElementById('timeRemaining').textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        }
+        
+        startPaymentTimer();
+        <% } %>
+        
+        function copyAddress() {
+            const address = document.getElementById('bitcoinAddress').textContent;
+            const amount = document.getElementById('paymentAmount').textContent;
+            const text = `Отправьте ${amount} на адрес: ${address}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Информация для оплаты скопирована в буфер обмена!');
+            });
+        }
+        
+        async function checkPaymentStatus() {
+            try {
+                const response = await fetch(`/api/payment/check?orderId=<%= order.order_id %>`);
+                const result = await response.json();
+                
+                if (result.status === 'paid') {
+                    alert('Оплата подтверждена! Страница будет перезагружена.');
+                    location.reload();
+                } else {
+                    alert('Оплата еще не поступила. Пожалуйста, подождите или проверьте позже.');
+                }
+            } catch (error) {
+                console.error('Error checking payment:', error);
+                alert('Ошибка при проверке статуса оплаты');
+            }
+        }
+        
+        // Auto-refresh status every 30 seconds if pending
+        <% if (order.payment_status === 'pending') { %>
+        setInterval(checkPaymentStatus, 30000);
+        <% } %>
+    </script>
+</body>
+</html>
